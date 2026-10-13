@@ -22,6 +22,7 @@ from decimal import Decimal
 from mathutrice import models
 from mathutrice.referentiel import REFERENTIEL
 from mathutrice.seed import seed_missing
+from mathutrice import production_signals
 import msal
 import uvicorn
 import shutil
@@ -85,6 +86,10 @@ def cleanup_old_conversations():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Here and not at import: uvicorn applies its logging configuration after
+    # the import, and would remove the log handler.
+    production_signals.start("mathutrice")
+
     create_db_and_tables()
     seed_missing(engine)
 
@@ -95,12 +100,17 @@ async def lifespan(app: FastAPI):
     yield
 
     scheduler.shutdown()
+    production_signals.shutdown()
 
 
 # ------------------------------------------------------------------
 # FastAPI app
 # ------------------------------------------------------------------
 
+
+# Checked at import, not only in lifespan: a partial PostHog setting stops the
+# start with the missing one named, like every other invalid setting.
+production_signals.read_settings()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -175,6 +185,14 @@ from mathutrice.fonctions_python.type_questions.qro_generator import (  # noqa: 
 from mathutrice.lacune_evaluation.LLM_as_Evaluator import (  # noqa: E402
     diagnostiquer_depuis_competence,
 )
+
+# Defined above the line adding SessionMiddleware, so it runs inside it: the
+# session is loaded when it reads the signed-in user.
+@app.middleware("http")
+async def production_signals_context(request: Request, call_next):
+    with production_signals.request_context(request):
+        return await call_next(request)
+
 
 app.add_middleware(
         SessionMiddleware,
