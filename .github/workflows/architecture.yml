@@ -110,6 +110,8 @@ jobs:
           session-secret: ${{ secrets.SESSION_SECRET }}
           dev-login-key: ${{ secrets.DEV_LOGIN_KEY }}
           llm-api-key: ${{ secrets.LLM_API_KEY }}
+          posthog-project-token: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
+          posthog-environment: staging
 
   # The Promotion, first half: find the image of staging's last green deploy.
   # It reads this workflow's own runs, not the staging app: a deploy sets the
@@ -188,3 +190,5 @@ jobs:
           session-secret: ${{ secrets.SESSION_SECRET }}
           dev-login-key: ${{ secrets.DEV_LOGIN_KEY }}
           llm-api-key: ${{ secrets.LLM_API_KEY }}
+          posthog-project-token: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
+          posthog-environment: production

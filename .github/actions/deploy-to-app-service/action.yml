@@ -28,6 +28,12 @@ inputs:
   llm-api-key:
     description: LLM_API_KEY, the Mistral key.
     required: true
+  posthog-project-token:
+    description: POSTHOG_PROJECT_TOKEN, the PostHog project's token.
+    required: true
+  posthog-environment:
+    description: POSTHOG_ENVIRONMENT, what each error and log line is tagged with.
+    required: true
   llm-base-url:
     description: LLM_BASE_URL, where the app sends its LLM calls.
     required: false
@@ -48,6 +54,8 @@ runs:
     # - AUTH_MODE=dev: these environments hold generated data and no real users;
     #   the dev sign-in is guarded by the environment's own DEV_LOGIN_KEY, and
     #   its cookie signed by the environment's own SESSION_SECRET.
+    # - POSTHOG_*: errors and logs go to PostHog's EU region, tagged with the
+    #   environment's name.
     - name: Write this environment's settings
       shell: bash
       env:
@@ -57,6 +65,8 @@ runs:
         DEV_LOGIN_KEY: ${{ inputs.dev-login-key }}
         LLM_API_KEY: ${{ inputs.llm-api-key }}
         LLM_BASE_URL: ${{ inputs.llm-base-url }}
+        POSTHOG_PROJECT_TOKEN: ${{ inputs.posthog-project-token }}
+        POSTHOG_ENVIRONMENT: ${{ inputs.posthog-environment }}
       run: |
         az webapp config appsettings set \
           --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" --output none \
@@ -69,7 +79,10 @@ runs:
             "LLM_BASE_URL=$LLM_BASE_URL" \
             "SESSION_SECRET=$SESSION_SECRET" \
             "DEV_LOGIN_KEY=$DEV_LOGIN_KEY" \
-            "LLM_API_KEY=$LLM_API_KEY"
+            "LLM_API_KEY=$LLM_API_KEY" \
+            POSTHOG_HOST=https://eu.i.posthog.com \
+            "POSTHOG_ENVIRONMENT=$POSTHOG_ENVIRONMENT" \
+            "POSTHOG_PROJECT_TOKEN=$POSTHOG_PROJECT_TOKEN"
 
     # The image is public on GHCR, so the app pulls it without credentials.
     - name: Run the image
