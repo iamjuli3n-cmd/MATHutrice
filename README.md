@@ -141,8 +141,12 @@ the hourly conversation cleanup inside it, as a local run does.
 
 Settings live in the GitHub Environment of the same name and are written to the
 app at every deploy, never committed: `DEV_LOGIN_KEY`, `SESSION_SECRET` and
-`LLM_API_KEY` as secrets, the Azure IDs and app name as variables. Everything
-else is a constant in `.github/actions/deploy-to-app-service/action.yml`.
+`LLM_API_KEY` and `POSTHOG_PROJECT_TOKEN` as secrets, the Azure IDs and app name
+as variables. Production also holds `LLM_BASE_URL` as a secret: it calls its LLM
+through the course's relay, which forwards the Mistral key and never stores it;
+staging calls Mistral directly, as a laptop does. Everything else is a constant
+in `.github/actions/deploy-to-app-service/action.yml`. `production.json`, at the
+root, names Fork production's address.
 
 **Known limit: the data is reset at every deploy and every restart.** SQLite
 lives on the container's own disk, because `/home`, App Service's lasting
