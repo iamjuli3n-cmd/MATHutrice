@@ -192,3 +192,7 @@ jobs:
           llm-api-key: ${{ secrets.LLM_API_KEY }}
           posthog-project-token: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
           posthog-environment: production
+          # Production calls its LLM through the course's relay, whose URL (with
+          # its token) is a secret of the production Environment. Staging keeps
+          # Mistral's own URL, the action's default.
+          llm-base-url: ${{ secrets.LLM_BASE_URL }}
