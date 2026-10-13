@@ -339,6 +339,17 @@ def sign_in(
 # ------------------------------------------------------------------
 
 
+# TEMPORARY (Lab 3, step 5): proves the production signals on staging, then is
+# removed. Logs one line, then raises an exception whose message names it.
+@app.get("/lab3/raise")
+def lab3_raise(request: Request):
+    import logging
+
+    user = (request.session.get("user") or {}).get("email", "anonymous")
+    logging.getLogger("mathutrice.lab3").info("Lab 3 proof route called by %s", user)
+    raise RuntimeError("Lab 3 step 5: deliberate exception from the proof route")
+
+
 @app.get("/test_login")
 async def login(request: Request):
     if AUTH_MODE == "dev":
