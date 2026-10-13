@@ -116,6 +116,39 @@ The first call answers `303` with a `Set-Cookie: session=…`. `role` is
 user's name, or one derived from the address. Add `-d 'key=…'` when
 `DEV_LOGIN_KEY` is set.
 
+## Deploying on Azure App Service
+
+This fork runs in two environments, two App Service apps on one Linux B1 plan:
+`iamjuli3n-cmd-mathutrice-staging` and `iamjuli3n-cmd-mathutrice-production`
+(`https://<app>.azurewebsites.net`). Both run the same image and sign in through
+the development sign-in (`AUTH_MODE=dev`), each with its own `DEV_LOGIN_KEY` and
+`SESSION_SECRET`: they hold generated data, not real users.
+
+- **Staging, on green.** A push to `course-2026-fallback-ci` whose
+  `architecture` job passes runs `deploy to staging`
+  (`.github/workflows/architecture.yml`): it builds one image from the
+  `Dockerfile`, tags it with the commit, pushes it to
+  `ghcr.io/iamjuli3n-cmd/mathutrice:<commit>`, deploys it, and waits until the
+  app answers with that commit in its `X-Revision` header. Pull requests and red
+  runs are never deployed.
+- **Production, by Promotion.** `gh workflow run architecture.yml --ref
+  course-2026-fallback-ci` deploys the image of staging's last green deploy, read
+  from the workflow's own runs, and builds nothing. A failed staging deploy is
+  skipped, and the log says so.
+
+The container runs one process, `uvicorn mathutrice.app:app` on port 8000, with
+the hourly conversation cleanup inside it, as a local run does.
+
+Settings live in the GitHub Environment of the same name and are written to the
+app at every deploy, never committed: `DEV_LOGIN_KEY`, `SESSION_SECRET` and
+`LLM_API_KEY` as secrets, the Azure IDs and app name as variables. Everything
+else is a constant in `.github/actions/deploy-to-app-service/action.yml`.
+
+**Known limit: the data is reset at every deploy and every restart.** SQLite
+lives on the container's own disk, because `/home`, App Service's lasting
+storage, is a network share on which SQLite cannot take its locks. The database
+is created and seeded again at every start.
+
 ## Layout
 
 ```

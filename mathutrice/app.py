@@ -104,6 +104,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# The commit this image was built from (Dockerfile, REVISION), sent with every
+# answer, so that a deploy can tell the new image answered and not the old one.
+REVISION = os.getenv("REVISION", "unknown")
+
+
+@app.middleware("http")
+async def add_revision_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Revision"] = REVISION
+    return response
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

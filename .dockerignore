@@ -1,0 +1,13 @@
+# Never in the image: secrets come from the environment the image runs in.
+.env
+.env.*
+# Local state the image builds or creates itself.
+.venv
+mathutrice.db
+mathutrice/rag_documents
+**/__pycache__
+.git
+.github
+.vscode
+.claude
+docs
